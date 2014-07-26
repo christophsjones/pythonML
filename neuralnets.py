@@ -18,3 +18,15 @@ class NN(object):
     
     # Initialize weights between levels
     self.weights = [random.uniform(-0.5, 0.5, (i,j)) for i,j in zip(self.layers[:-1], self.layers[1:])]
+
+  def activate(self):
+    """Activate all nodes, and output last layer"""
+    return random.uniform(-0.5, 0.5, n_out)
+
+  def backPropagate(self, targets, N, M):
+    """Bad style bro"""  
+    pass
+
+  def train(self, data, targets):
+    """Trains the neural network. HAHA rite"""
+    pass
