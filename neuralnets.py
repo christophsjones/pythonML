@@ -28,5 +28,6 @@ class NN(object):
     pass
 
   def train(self, data, targets):
-    """Trains the neural network. HAHA rite"""
-    pass
+    """Trains the neural network"""
+    for i in range(num_epochs):
+      self.backPropagate(targets, 0.1, 0.01):
