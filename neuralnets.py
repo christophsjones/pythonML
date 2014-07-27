@@ -1,5 +1,5 @@
 """
-Back-propagation neural network implementation, using numpy
+Back-propagation neural network, using numpy
 
 Adapted from http://stackoverflow.com/a/3143318
 """
@@ -32,9 +32,12 @@ class NN(object):
     self.weights = [random.uniform(-0.5, 0.5, [i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
     self.past_change = [zeros([i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
 
+    self.scale = (zeros(n_in), zeros(n_out))
+
   def activate(self, inputs):
     """Activate all nodes, and output last layer"""
     # Append bias term
+    inputs = inputs.astype(float) / self.scale[0]
     self.activations[0] = append(inputs, 1.0)
 
     # Activate each hidden layer, using sigmoid function
@@ -46,7 +49,7 @@ class NN(object):
     self.activations[-1] = self.weights[-1].dot(self.activations[-2])
 
     # Return a copy of the output layer
-    return self.activations[-1][:]
+    return self.activations[-1][:] * self.scale[1]
 
   def backPropagate(self, targets, a, M):
     """Update weights assuming neural network is activated to achieve targets""" 
@@ -74,7 +77,13 @@ class NN(object):
 
   def train(self, data, targets, num_epochs=1000, a=0.01, M=0.002):
     """Trains the neural network"""
-    #TODO: normalize inputs and outputs. Definitely need to do this
+    
+    # Scale inputs to [0,1]
+    # Could use log scale if there are outliers
+    self.scale = (amax(data, 0), amax(targets, 0))
+    data = data.astype(float) / self.scale[0]
+    targets = targets.astype(float) / self.scale[1]
+
     error = 0.0
     for i in xrange(num_epochs):
       error = 0.0
