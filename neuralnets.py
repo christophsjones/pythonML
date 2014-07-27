@@ -27,11 +27,10 @@ class NN(object):
     # Could use numpy array, but they're updated sequentially anyway
     self.activations = [ones(node_count) for node_count in self.layers]
     
-    # Initialize weights between levels
-    self.weights = [random.uniform(-0.5, 0.5, [i, j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
-
-    # Initialize previous change in weights, for momentum
-    self.past_change = [zeros([i, j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
+    # Initialize weights between levels, and past changes for momentum
+    self.bias_correct = ones(self.n_layers - 1) - identity(self.n_layers - 1)[-1]
+    self.weights = [random.uniform(-0.5, 0.5, [i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
+    self.past_change = [zeros([i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
 
   def activate(self, inputs):
     """Activate all nodes, and output last layer"""
@@ -52,20 +51,20 @@ class NN(object):
   def backPropagate(self, targets, a, M):
     """Update weights assuming neural network is activated to achieve targets""" 
 
-    current_change = [zeros([i,j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
+    current_change = [zeros([i,j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
     
     error = self.activations[-1] - targets
     # The actual cost function being minimized
     err = 0.5 * linalg.norm(error)
 
-    deltas = error
+    deltas = append(error, 0.0)
     current_change[-1] = outer(error, self.activations[-2])
 
     for i in reversed(xrange(self.n_layers - 2)):
-      error = self.weights[i + 1].T.dot(deltas)
+      error = self.weights[i + 1].T.dot(deltas[:-1])
       deltas = dsigmoid(self.activations[i + 1]) * error
 
-      current_change[i] = outer(deltas, self.activations[i])
+      current_change[i] = outer(deltas[:-1], self.activations[i])
 
     for i in xrange(self.n_layers - 1):
       self.weights[i] -= M*self.past_change[i] + a*current_change[i]
