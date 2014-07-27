@@ -31,7 +31,7 @@ class NN(object):
     self.weights = [random.uniform(-0.5, 0.5, [i, j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
 
     # Initialize previous change in weights, for momentum
-    self.past_change = [zeros([i,j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
+    self.past_change = [zeros([i, j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
 
   def activate(self, inputs):
     """Activate all nodes, and output last layer"""
@@ -49,25 +49,38 @@ class NN(object):
     # Return a copy of the output layer
     return self.activations[-1][:]
 
-  def backPropagate(self, targets, N, M):
+  def backPropagate(self, targets, a, M):
     """Update weights assuming neural network is activated to achieve targets""" 
 
-    deltas = [zeros(node_count) for node_count in self.layers]
+    current_change = [zeros([i,j]) for i,j in zip(self.layers[1:], self.layers[:-1])]
     
-    current_change = zeros([layers[-1], layers[-2]])
-    error = targets - self.activations[-1]
+    error = self.activations[-1] - targets
+    # The actual cost function being minimized
+    err = 0.5 * linalg.norm(error)
 
+    deltas = error
+    current_change[-1] = outer(error, self.activations[-2])
 
-    for i in xrange(self.n_layers):
-      delta[i] = 
+    for i in reversed(xrange(self.n_layers - 2)):
+      error = self.weights[i + 1].T.dot(deltas)
+      deltas = dsigmoid(self.activations[i + 1]) * error
 
-      self.weights[i] += M*self.past_change[i] + N*current_change
-      self.past_change[i] = current_change
+      current_change[i] = outer(deltas, self.activations[i])
 
+  for i in xrange(self.n_layers - 1):
+    self.weights[i] += M*self.past_change[i] + a*current_change[i]
+    self.past_change[i] = current_change[i]
 
-  return err    
+  return err
 
-  def train(self, data, targets):
+  def train(self, data, targets, num_epochs=1000, a=0.01, M=0.002):
     """Trains the neural network"""
-    for i in range(num_epochs):
-      self.backPropagate(targets, 0.1, 0.01)
+    error = 0.0
+    for i in xrange(num_epochs):
+      error = 0.0
+      for x,y in zip(data, targets):
+        self.activate(x)
+        error += self.backPropagate(y, a, M)
+      if i % 100 == 0:
+        print "Iteration: %s, Error: %s" % (i,error)
+    return error
