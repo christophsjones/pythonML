@@ -67,14 +67,15 @@ class NN(object):
 
       current_change[i] = outer(deltas, self.activations[i])
 
-  for i in xrange(self.n_layers - 1):
-    self.weights[i] += M*self.past_change[i] + a*current_change[i]
-    self.past_change[i] = current_change[i]
+    for i in xrange(self.n_layers - 1):
+      self.weights[i] -= M*self.past_change[i] + a*current_change[i]
+      self.past_change[i] = current_change[i]
 
-  return err
+    return err
 
   def train(self, data, targets, num_epochs=1000, a=0.01, M=0.002):
     """Trains the neural network"""
+    #TODO: normalize inputs and outputs. Definitely need to do this
     error = 0.0
     for i in xrange(num_epochs):
       error = 0.0
