@@ -1,7 +1,7 @@
 """
 Back-propagation neural network, using numpy
 
-Adapted from http://stackoverflow.com/a/3143318
+Heavily adapted from http://stackoverflow.com/a/3143318
 """
 
 from numpy import *
@@ -17,7 +17,8 @@ def dsigmoid(ys):
 
 class NN(object):
 
-  def __init__(self, n_in, n_out, *hidden):
+  def __init__(self, n_in, *hidden):
+    hidden, n_out = hidden[:-1], hidden[-1]
     # Initialize size of each layer
     # One extra input for biases
     self.layers = array([node_count + 1 for node_count in (n_in,) + hidden] + [n_out])
@@ -75,7 +76,7 @@ class NN(object):
 
     return err
 
-  def train(self, data, targets, num_epochs=1000, a=0.01, M=0.002):
+  def train(self, data, targets, num_epochs=1000, a=0.01, M=0.002, verbose=True):
     """Trains the neural network"""
     
     # Scale inputs to [0,1]
@@ -90,6 +91,6 @@ class NN(object):
       for x,y in zip(data, targets):
         self.activate(x)
         error += self.backPropagate(y, a, M)
-      if i % 100 == 0:
-        print "Iteration: %s, Error: %s" % (i,error)
+      if verbose and i % (num_epochs / 10) == 0:
+        print "Iteration: %s of %s, Error: %s" % (i,num_epochs,error)
     return error
