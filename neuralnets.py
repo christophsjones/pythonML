@@ -33,7 +33,7 @@ class NN(object):
     self.weights = [random.uniform(-0.5, 0.5, [i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
     self.past_change = [zeros([i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
 
-    self.scale = (zeros(n_in), zeros(n_out))
+    self.scale = (ones(n_in), ones(n_out))
 
   def activate(self, inputs):
     """Activate all nodes, and output last layer"""
