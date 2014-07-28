@@ -1,7 +1,7 @@
 """
 Back-propagation neural network, using numpy
 
-Heavily adapted from http://stackoverflow.com/a/3143318
+Heavily modified from http://stackoverflow.com/a/3143318
 """
 
 from numpy import *
@@ -9,7 +9,7 @@ from numpy import *
 # Sigmoid function used in this neural network
 def sigmoid(xs):
   """Compute sigmoid at each x in vector"""
-  return 1.0 / (1 + exp(-xs))
+  return 1.0 / (1.0 + exp(-xs))
 
 def dsigmoid(ys):
   """Compute sigmoid derivative from each y in vector"""
@@ -29,16 +29,24 @@ class NN(object):
     self.activations = [ones(node_count) for node_count in self.layers]
     
     # Initialize weights between levels, and past changes for momentum
-    self.bias_correct = ones(self.n_layers - 1) - identity(self.n_layers - 1)[-1]
+    self.bias_correct = ~identity(self.n_layers - 1, dtype=bool)[-1]
     self.weights = [random.uniform(-0.5, 0.5, [i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
     self.past_change = [zeros([i, j]) for i,j in zip(self.layers[1:] - self.bias_correct, self.layers[:-1])]
 
-    self.scale = (ones(n_in), ones(n_out))
+    self.input_scale = (ones(n_in), zeros(n_in))
+    self.output_scale = (ones(n_out), zeros(n_out))
 
   def activate(self, inputs):
     """Activate all nodes, and output last layer"""
+    inputs = (inputs - self.input_scale[1]).astype(float) / self.input_scale[0]
+
+    ans = self._activate(inputs) * self.output_scale[0] + self.output_scale[1]
+    # Return a copy of the activation value for modification
+    return ans[:]
+
+  def _activate(self, inputs):
+    """Internal activation, does not scale input/output"""
     # Append bias term
-    inputs = inputs.astype(float) / self.scale[0]
     self.activations[0] = append(inputs, 1.0)
 
     # Activate each hidden layer, using sigmoid function
@@ -49,8 +57,7 @@ class NN(object):
     # Has the advantage of simulating a perceptron when there are no hidden layers
     self.activations[-1] = self.weights[-1].dot(self.activations[-2])
 
-    # Return a copy of the output layer
-    return self.activations[-1][:] * self.scale[1]
+    return self.activations[-1]
 
   def backPropagate(self, targets, a, M):
     """Update weights assuming neural network is activated to achieve targets""" 
@@ -59,7 +66,7 @@ class NN(object):
     
     error = self.activations[-1] - targets
     # The actual cost function being minimized
-    err = 0.5 * linalg.norm(error)
+    err = 0.5 * dot(error,error.conj())
 
     deltas = append(error, 0.0)
     current_change[-1] = outer(error, self.activations[-2])
@@ -79,11 +86,20 @@ class NN(object):
   def train(self, data, targets, num_epochs=1000, a=0.01, M=0.002, verbose=True):
     """Trains the neural network"""
     
-    # Scale inputs to [0,1]
+    # Scale inputs to [-1,1]
     # Could use log scale if there are outliers
-    self.scale = (amax(data, 0), amax(targets, 0))
-    data = data.astype(float) / self.scale[0]
-    targets = targets.astype(float) / self.scale[1]
+    u,v = amax(data, 0), amin(data, 0)
+    w = u - v
+    w[w == 0.0] = 2.0
+    self.input_scale = (0.5 * w, 0.5 * (u + v))
+    data = (data - self.input_scale[1]).astype(float) / self.input_scale[0]
+    print "Input scale:", self.input_scale
+
+    # If amax == amin, GG
+    u,v = amax(targets, 0), amin(targets, 0)
+    self.output_scale = (0.5 * (u - v), 0.5 * (u + v))
+    targets = (targets - self.output_scale[1]).astype(float) / self.output_scale[0]
+    print "Output scale:", self.output_scale
 
     error = 0.0
     for i in xrange(num_epochs):
