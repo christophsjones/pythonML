@@ -29,7 +29,7 @@ class NN(object):
     self.activations = [ones(node_count) for node_count in self.layers]
     
     # Initialize weights between levels, and past changes for momentum
-    self.weight_shapes = zip(self.layers[1:], self.layers[:-1])
+    self.weight_shapes = zip(self.layers[1:], self.layers[:-1] + 1)
     
     self.weights = [random.uniform(-0.5, 0.5, shape) for shape in self.weight_shapes]
     self.past_change = [zeros(shape) for shape in self.weight_shapes]
