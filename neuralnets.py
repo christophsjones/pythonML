@@ -43,7 +43,7 @@ class NN(object):
     return self._activate(inputs) * self.output_scale + self.output_mean
 
   def _activate(self, inputs):
-    """Activate all nodes, and output last layer. Don't scale inputs"""
+    """Activate all nodes, and output last layer. Don't scale"""
     self.activations[0] = inputs
 
     # Activate each hidden layer, using sigmoid function
