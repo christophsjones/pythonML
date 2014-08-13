@@ -17,12 +17,13 @@ def fromfunc(f=lambda x,y: x**2 + y**2, m=200, n=2):
   ys = zeros(m)
   for i in xrange(m):
     ys[i] = f(xs[i])
-  return {"data" : xs, "target" : ys, "dim" : (n,1)}
+  return {"data" : xs, "target" : ys, "dim" : (n,1), "function" : f}
 
-def fromfunc(f=lambda x,y: x**2 + y**2, m=200, n=2, s=0.05):
+def fromfunc_approx(f=lambda x,y: x**2 + y**2, m=200, n=2, s=0.05):
   xs = random.rand(m,n)
-  ys = s * random.randn(m)
+  ys = zeros(m)
   for i in xrange(m):
     ys[i] += f(xs[i])
-  return {"data" : xs, "target" : ys, "dim" : (n,1)}
+  ys += s * random.randn(m)
+  return {"data" : xs, "target" : ys, "dim" : (n,1), "function" : f}
 
